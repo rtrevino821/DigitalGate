@@ -89,17 +89,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private static Context context = null;
+    public TextView messageTV;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final TextView messageTV = (TextView) findViewById(R.id.messageTV);
+        messageTV = (TextView) findViewById(R.id.messageTV);
 
         EstimoteSDK.initialize(getApplicationContext(), "stevenjoy99-yahoo-com-s-yo-lyx", "0f4d0fa349ea5d6604f52b776a9653c8");
 
-        setContentView(R.layout.activity_main);
         context = this;
 
 
@@ -121,20 +121,20 @@ public class MainActivity extends AppCompatActivity {
 
                 new EstimoteCloudBeaconDetailsFactory());
 
-        /** listener used for nearable stickers*/
-        beaconManager = new BeaconManager(getApplicationContext());
-
-        beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
-            @Override
-            public void onServiceReady() {
-                try {
-                    beaconManager.startRanging(ALL_ESTIMOTE_BEACONS);
-
-                } catch (Exception e) {
-                    Log.e("error", "Cannot start ranging", e);
-                }
-            }
-        });
+//        /** listener used for nearable stickers*/
+//        beaconManager = new BeaconManager(getApplicationContext());
+//
+//        beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
+//            @Override
+//            public void onServiceReady() {
+//                try {
+//                    beaconManager.startRanging(ALL_ESTIMOTE_BEACONS);
+//
+//                } catch (Exception e) {
+//                    Log.e("error", "Cannot start ranging", e);
+//                }
+//            }
+//        });
 
 
 //        beaconManager.setMonitoringListener(new BeaconManager.MonitoringListener() {
@@ -240,9 +240,9 @@ public class MainActivity extends AppCompatActivity {
 
                     //GATE Code
                     if (beaconDetails.getBeaconName().equals("ice")) {
+                        Log.d("Key", "Ice Found");
                         text = "You're in " + beaconDetails.getBeaconName() + "'s range!";
                         messageTV.setText(text);
-
                     }
 
                 }
@@ -278,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         proximityContentManager.destroy();
-        beaconManager.disconnect();
+        //beaconManager.disconnect();
     }
 
 }
