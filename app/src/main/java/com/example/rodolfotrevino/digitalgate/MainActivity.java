@@ -8,6 +8,7 @@ package com.example.rodolfotrevino.digitalgate;
         import android.content.Intent;
         import android.net.Uri;
         import android.os.Bundle;
+        import android.os.RemoteException;
         import android.support.v7.app.AppCompatActivity;
         //import android.support.v7.widget.LinearLayoutManager;
         //import android.support.v7.widget.RecyclerView;
@@ -15,6 +16,7 @@ package com.example.rodolfotrevino.digitalgate;
         import android.view.View;
         import android.widget.TextView;
 
+        import com.estimote.sdk.Beacon;
         import com.estimote.sdk.BeaconManager;
         import com.estimote.sdk.EstimoteSDK;
         import com.estimote.sdk.Nearable;
@@ -28,6 +30,8 @@ package com.example.rodolfotrevino.digitalgate;
         import com.example.rodolfotrevino.digitalgate.estimote.NearableID;
         import com.example.rodolfotrevino.digitalgate.estimote.ProximityContentManager;
        // import com.fasterxml.jackson.databind.ObjectMapper;
+        import android.os.RemoteException;
+
 
 
         import org.json.JSONArray;
@@ -77,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int BACKGROUND_COLOR_NEUTRAL = android.graphics.Color.rgb(160, 169, 172);
 
     private ProximityContentManager proximityContentManager;
+    private static final Region ALL_ESTIMOTE_BEACONS_REGION = new Region("rid", null, null, null);
+
 
     public static Context getContext() {
         return context;
@@ -103,20 +109,48 @@ public class MainActivity extends AppCompatActivity {
         secureRegion3 = new SecureRegion("Secure region", UUID.fromString("B9407F30-F5F8-466E-AFF9-25556B57FE6D"), 20859, 25702);
 
         Log.d("Tag", "Beacons");
-        proximityContentManager = new ProximityContentManager(this,
-                Arrays.asList(
-                        /** Proximity Beacons Identifier, minor and major*/
-                        //new BeaconID("B9407F30-F5F8-466E-AFF9-25556B57FE6D", 32725, 55822), //
-                        new BeaconID("B9407F30-F5F8-466E-AFF9-25556B57FE6D", 5323, 38267), //Candy
-                        new BeaconID("B9407F30-F5F8-466E-AFF9-25556B57FE6D", 60973, 22221), //Beetroot
-                        new BeaconID("B9407F30-F5F8-466E-AFF9-25556B57FE6D", 20930, 14720), //Ice
-                        new BeaconID("B9407F30-F5F8-466E-AFF9-25556B57FE6D", 26788, 12168), //Mint
-                        new BeaconID("B9407F30-F5F8-466E-AFF9-25556B57FE6D", 3138, 64033)), //Lemon
-
-                new EstimoteCloudBeaconDetailsFactory());
+//        proximityContentManager = new ProximityContentManager(this,
+//                Arrays.asList(
+//                        /** Proximity Beacons Identifier, minor and major*/
+//                        //new BeaconID("B9407F30-F5F8-466E-AFF9-25556B57FE6D", 32725, 55822), //
+//                        new BeaconID("B9407F30-F5F8-466E-AFF9-25556B57FE6D", 5323, 38267), //Candy
+//                        new BeaconID("B9407F30-F5F8-466E-AFF9-25556B57FE6D", 60973, 22221), //Beetroot
+//                        new BeaconID("B9407F30-F5F8-466E-AFF9-25556B57FE6D", 20930, 14720), //Ice
+//                        new BeaconID("B9407F30-F5F8-466E-AFF9-25556B57FE6D", 26788, 12168), //Mint
+//                        new BeaconID("B9407F30-F5F8-466E-AFF9-25556B57FE6D", 3138, 64033)), //Lemon
+//
+//                new EstimoteCloudBeaconDetailsFactory());
 
         /** listener used for nearable stickers*/
         beaconManager = new BeaconManager(getApplicationContext());
+
+        beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
+            @Override
+            public void onServiceReady() {
+                try {
+                    beaconManager.startRanging(ALL_ESTIMOTE_BEACONS_REGION);
+                } catch (Exception e) {
+                    Log.e("error", "Cannot start ranging", e);
+                }
+            }
+        });
+
+
+        beaconManager.setMonitoringListener(new BeaconManager.MonitoringListener() {
+
+            @Override
+            public void onEnteredRegion(Region region, List<Beacon> beacons) {
+                for (Beacon beacon : beacons) {
+                    String id = String.valueOf(beacon.getMajor()) + String.valueOf(beacon.getMinor());
+                }
+            }
+
+            @Override
+            public void onExitedRegion(Region region) {
+                // could add an "exit" notification too if you want (-:
+            }
+        });
+
 //
 //        beaconManager.setNearableListener(new BeaconManager.NearableListener() {
 //            @Override
@@ -178,38 +212,38 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
 
-        /** Broadcast the nearable Beacons signal*/
-        beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
-            @Override
-            public void onServiceReady() {
+//        /** Broadcast the nearable Beacons signal*/
+//        beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
+//            @Override
+//            public void onServiceReady() {
+//
+//                // Beacons ranging.
+//                beaconManager.startRanging(ALL_ESTIMOTE_BEACONS);
+//
+//            }
+//        });
 
-                // Beacons ranging.
-                beaconManager.startRanging(ALL_ESTIMOTE_BEACONS);
-
-            }
-        });
-
-        proximityContentManager.setListener(new ProximityContentManager.Listener() {
-            @Override
-            public void onContentChanged(Object content) {
-                String text;
-
-                if (content != null) {
-                    EstimoteCloudBeaconDetails beaconDetails = (EstimoteCloudBeaconDetails) content;
-                    BeaconID beaconID = (BeaconID) content;
-
-                    String id = beaconID.getProximityUUID().toString() + beaconID.getMajor() + beaconID.getMinor();
-
-                    //GATE Code
-                    if (beaconDetails.getBeaconName().equals("lemon")) {
-                        text = "You're in " + beaconDetails.getBeaconName() + "'s range!" + "\n" + "Beacon ID: " + id;
-                        messageTV.setText(text);
-
-                    }
-
-                }
-            }
-        });
+//        proximityContentManager.setListener(new ProximityContentManager.Listener() {
+//            @Override
+//            public void onContentChanged(Object content) {
+//                String text;
+//
+//                if (content != null) {
+//                    EstimoteCloudBeaconDetails beaconDetails = (EstimoteCloudBeaconDetails) content;
+//                    BeaconID beaconID = (BeaconID) content;
+//
+//                    String id = beaconID.getProximityUUID().toString() + beaconID.getMajor() + beaconID.getMinor();
+//
+//                    //GATE Code
+//                    if (beaconDetails.getBeaconName().equals("lemon")) {
+//                        text = "You're in " + beaconDetails.getBeaconName() + "'s range!" + "\n" + "Beacon ID: " + id;
+//                        messageTV.setText(text);
+//
+//                    }
+//
+//                }
+//            }
+//        });
 
     }
 
