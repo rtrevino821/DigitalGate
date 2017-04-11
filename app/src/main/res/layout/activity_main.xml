@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gate_bg"
+    tools:context="com.example.rodolfotrevino.digitalgate.MainActivity">
+
+    <ImageView
+        android:id="@+id/bg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/logo_resized_720" />
+
+    <TextView
+        android:id="@+id/messageTV"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/bg"
+        android:fontFamily="sans-serif-thin"
+        android:text="Welcome to Hertz Fast Lane"
+        android:textAlignment="center"
+        android:textColor="@color/colorAccent"
+        android:textSize="40dp" />
+
+</RelativeLayout>
