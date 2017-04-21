@@ -4,61 +4,62 @@ package com.example.rodolfotrevino.digitalgate;
  * Created by Steven J on 2/17/2017.
  */
 
-        import android.content.Context;
-        import android.content.Intent;
-        import android.net.Uri;
-        import android.os.Bundle;
-        import android.os.RemoteException;
-        import android.support.v7.app.AppCompatActivity;
-        //import android.support.v7.widget.LinearLayoutManager;
-        //import android.support.v7.widget.RecyclerView;
-        import android.util.Log;
-        import android.view.View;
-        import android.widget.TextView;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.RemoteException;
+import android.support.v7.app.AppCompatActivity;
+//import android.support.v7.widget.LinearLayoutManager;
+//import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
 
-        import com.estimote.sdk.Beacon;
-        import com.estimote.sdk.BeaconManager;
-        import com.estimote.sdk.EstimoteSDK;
-        import com.estimote.sdk.Nearable;
-        import com.estimote.sdk.Region;
-        import com.estimote.sdk.SecureRegion;
-        import com.estimote.sdk.SystemRequirementsChecker;
-        import com.estimote.sdk.cloud.model.Color;
-        import com.example.rodolfotrevino.digitalgate.estimote.BeaconID;
-        import com.example.rodolfotrevino.digitalgate.estimote.EstimoteCloudBeaconDetails;
-        import com.example.rodolfotrevino.digitalgate.estimote.EstimoteCloudBeaconDetailsFactory;
-        import com.example.rodolfotrevino.digitalgate.estimote.NearableID;
-        import com.example.rodolfotrevino.digitalgate.estimote.ProximityContentManager;
-       // import com.fasterxml.jackson.databind.ObjectMapper;
-        import android.os.RemoteException;
-
-
-
-        import org.json.JSONArray;
-        import org.json.JSONException;
-        import org.json.JSONObject;
+import com.estimote.sdk.Beacon;
+import com.estimote.sdk.BeaconManager;
+import com.estimote.sdk.EstimoteSDK;
+import com.estimote.sdk.Nearable;
+import com.estimote.sdk.Region;
+import com.estimote.sdk.SecureRegion;
+import com.estimote.sdk.SystemRequirementsChecker;
+import com.estimote.sdk.cloud.model.Color;
+import com.example.rodolfotrevino.digitalgate.estimote.BeaconID;
+import com.example.rodolfotrevino.digitalgate.estimote.EstimoteCloudBeaconDetails;
+import com.example.rodolfotrevino.digitalgate.estimote.EstimoteCloudBeaconDetailsFactory;
+import com.example.rodolfotrevino.digitalgate.estimote.NearableID;
+import com.example.rodolfotrevino.digitalgate.estimote.ProximityContentManager;
+// import com.fasterxml.jackson.databind.ObjectMapper;
+import android.os.RemoteException;
 
 
-        import java.io.BufferedReader;
-        import java.io.IOException;
-        import java.io.InputStreamReader;
-        import java.net.HttpURLConnection;
-        import java.net.MalformedURLException;
-        import java.net.URL;
-
-        import java.util.ArrayList;
-        import java.util.Arrays;
-        import java.util.HashMap;
-        import java.util.List;
-        import java.util.Map;
-        import java.util.UUID;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
-        import static com.estimote.sdk.internal.utils.EstimoteBeacons.ESTIMOTE_PROXIMITY_UUID;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+
+import static com.estimote.sdk.internal.utils.EstimoteBeacons.ESTIMOTE_PROXIMITY_UUID;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "Beacons";
 
+    String name;
+    private static String status = "inactive";
     private BeaconManager beaconManager;
 
     //TestingCarAdapter adapter;
@@ -66,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
     private SecureRegion secureRegion;
     private SecureRegion secureRegion2;
     private SecureRegion secureRegion3;
+    private Region region;
+
 
 
     private static final Region ALL_ESTIMOTE_BEACONS = new Region("rid", ESTIMOTE_PROXIMITY_UUID, null, null);
@@ -227,27 +230,106 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
 
-        proximityContentManager.setListener(new ProximityContentManager.Listener() {
+        beaconManager = new BeaconManager(this);
+        beaconManager.setRangingListener(new BeaconManager.RangingListener() {
             @Override
-            public void onContentChanged(Object content) {
-                String text;
+            public void onBeaconsDiscovered(Region region, List<Beacon> list) {
+                Log.d("Rudy", "Found Beacon");
+                if (!list.isEmpty()) {
+                    for (Beacon beacon : list) {
+                        if (beacon.getMajor() == 60973) {
+                            Log.d("Key", "Beetroot");
+                            String text = "You're in Beetroot's range!";
+                            messageTV.setText(text);
 
-                if (content != null) {
-                    EstimoteCloudBeaconDetails beaconDetails = (EstimoteCloudBeaconDetails) content;
-                    //BeaconID beaconID = (BeaconID) content;
+                            Runnable runnable = new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        name = exitPremise("60973");
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
 
-                    //String id = beaconID.getProximityUUID().toString() + beaconID.getMajor() + beaconID.getMinor();
+                            };
+                            Thread thread = new Thread(runnable);
+                            thread.start();
 
-                    //GATE Code
-                    if (beaconDetails.getBeaconName().equals("ice")) {
-                        Log.d("Key", "Ice Found");
-                        text = "You're in " + beaconDetails.getBeaconName() + "'s range!";
-                        messageTV.setText(text);
+                            try {
+                                thread.join();
+                            } catch (Exception e) {
+                                return;
+                            }
+
+                            if (status.equals("inactive")) {
+                                messageTV.setText("Sorry Error");
+                            } else {
+                                messageTV.setText("Have a good trip " + name);
+                            }
+
+                        }
                     }
 
                 }
             }
         });
+
+//        proximityContentManager.setListener(new ProximityContentManager.Listener() {
+//            @Override
+//            public void onContentChanged(Object content) {
+//                String text;
+//
+//                if (content != null) {
+//                    EstimoteCloudBeaconDetails beaconDetails = (EstimoteCloudBeaconDetails) content;
+//                    //BeaconID beaconID = (BeaconID) content;
+//
+//                    //String id = beaconID.getProximityUUID().toString() + beaconID.getMajor() + beaconID.getMinor();
+//                    //Log.d("Beacon Found!!!!", id);
+//
+//                    //GATE Code
+//                    if (beaconDetails.getBeaconName().equals("ice")) {
+//                        Log.d("Key", "Ice Found");
+//                        text = "You're in " + beaconDetails.getBeaconName() + "'s range!";
+//                        messageTV.setText(text);
+//
+//                        Runnable runnable = new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                try {
+//                                    name = exitPremise("Ice");
+//                                }catch (IOException e) {
+//                                    e.printStackTrace();
+//                                } catch (JSONException e) {
+//                                    e.printStackTrace();
+//                                }
+//                            }
+//
+//                        };
+//                        Thread thread = new Thread(runnable);
+//                        thread.start();
+//
+//                        try {
+//                            thread.join();
+//                        } catch (Exception e) {
+//                            return;
+//                        }
+//
+//                        if (status.equals("inactive")){
+//                            messageTV.setText("Sorry Error");
+//                        }else {
+//                            messageTV.setText("Have a good trip " + name);
+//                        }
+//
+//                    }
+//
+//                }
+//            }
+//        });
+
+        region = new Region("ranged region", UUID.fromString("B9407F30-F5F8-466E-AFF9-25556B57FE6D"), null, null);
 
     }
 
@@ -264,6 +346,13 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "Starting ProximityContentManager content updates");
             proximityContentManager.startContentUpdates();
         }
+
+        beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
+            @Override
+            public void onServiceReady() {
+                beaconManager.startRanging(region);
+            }
+        });
     }
 
 
@@ -279,6 +368,39 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         proximityContentManager.destroy();
         //beaconManager.disconnect();
+    }
+
+    public static String exitPremise(String beacon) throws IOException, JSONException {
+        URL url = null;
+        try {
+            url = new URL("http://34.205.184.198/gate.php?id=60973");
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        HttpURLConnection urlConnection = null;
+
+        urlConnection = (HttpURLConnection) url.openConnection();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
+        StringBuilder result = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            result.append(line);
+        }
+
+        String resultString = result.toString();
+
+        //use case for car not reserved
+        if (resultString.equals("No Results")) {
+            //status = "inactive";
+            return null;
+        }
+
+        JSONObject results = new JSONObject(resultString);
+
+        //use car is not flagged to leave lot
+        status = results.getString("status");
+
+        return results.getString("name");
     }
 
 }
